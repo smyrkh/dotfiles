@@ -24,6 +24,12 @@ config.show_new_tab_button_in_tab_bar = false
 -- delete tab index
 config.show_tab_index_in_tab_bar = false
 
+-- show scroll bar
+config.enable_scroll_bar = true
+
+-- scroll backline
+config.scrollback_lines = 10000
+
 ------------------------------
 -- font settings
 ------------------------------

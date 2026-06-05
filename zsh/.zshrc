@@ -221,8 +221,8 @@ type aws &> /dev/null \
 # expect package contains unbuffer
 type unbuffer &> /dev/null \
 	&& type less &> /dev/null \
-	&& alias ubless='() { unbuffer "$@" |& less -SR }' \
-	&& compdef ubless='unbuffer'
+	&& alias ubless='() { unbuffer "$@" |& less -SR }'
+#	&& compdef ubless='unbuffer'
 type checksec &> /dev/null \
 	&& alias chefsec='() { checksec --file="$@" }'
 
@@ -236,5 +236,5 @@ type uv &> /dev/null \
 type uvx &> /dev/null \
 	&& eval "$(uvx --generate-shell-completion zsh)"
 type docker &> /dev/null \
-	&& alias dx='docker exec -it -u 5ky12hm $(docker ps | peco | awk "{print \$1}") zsh'
+	&& alias dx='() { docker exec -it "$@" $(docker ps | peco | awk "{print \$1}") zsh }'
 

@@ -1,98 +1,80 @@
 return {
 	{
-		'williamboman/mason-lspconfig.nvim',
+		'neovim/nvim-lspconfig',
 		lazy = false,
-		-- TODO: delete: to avoid this error
-		-- Failed to run `config` for mason-lspconfig.nvim
-		-- lsp.lua:49: attempt to call field 'setup_handlers' (a nil value)
-		-- # stacktrace:
-		--   - .config/nvim/lua/plugins/lsp.lua:49 _in_ **config**
-		--   - .dotfiles/neovim/.config/nvim/init.lua:5
-		version = "^1.0.0",
 		dependencies = {
-			{
-				'williamboman/mason.nvim',
-				cmd = 'Mason',
-				build = ':MasonUpdate',
-				opts = {},
-				-- TODO: delete: to avoid setup_headers error
-				version = "^1.0.0",
-			},
-			'neovim/nvim-lspconfig',
+			'williamboman/mason.nvim',
+			'williamboman/mason-lspconfig.nvim',
 			'hrsh7th/cmp-nvim-lsp',
-			-- 'creativenull/efmls-configs-nvim',
 		},
 		config = function()
 			local autocmd = vim.api.nvim_create_autocmd
+			local augroup = vim.api.nvim_create_augroup
 
-			local ls = {
-				-- 'clangd', -- c language server -- The current platform is unsupported.
-				'jdtls', -- java language server
-				-- 'groovyls', -- groovy language server - Installation failed for Package(name=groovy-language-server) error=spawn: bash failed with exit code 1 and signal 0.
-				-- 'java_language_server', -- java language server -- can not install
-				-- 'efm',
-				'rust_analyzer' -- rust language server
-			}
-			if vim.fn.executable('go') == 1 then
-				table.insert(ls, 'gopls') -- go language server
-			end
-			if vim.fn.executable('npm') == 1 then
-				table.insert(ls, 'bashls') -- bash language server
-				table.insert(ls, 'eslint') -- javascript language server
-				table.insert(ls, 'ts_ls') -- typescript language server
-				table.insert(ls, 'astro') -- astro language server
-			end
-			if vim.fn.executable('python3') == 1 then
-				table.insert(ls, 'pylsp') -- python language server
-			end
-			if vim.fn.executable('cargo') == 1 then
-				table.insert(ls, 'nil_ls') -- nix language server
-			end
-			if vim.fn.executable('lua-language-server') == 1 then
-				table.insert(ls, 'lua_ls') -- lua language server
-			end
-
-			local mason_lspconfig = require('mason-lspconfig')
-			mason_lspconfig.setup({
-				ensure_installed = ls,
+			require('mason').setup()
+			require('mason-lspconfig').setup({
+				ensure_installed = {
+				},
 			})
-			-- local lspconfig = require('lspconfig')
+
 			local capabilities = require('cmp_nvim_lsp').default_capabilities()
-			mason_lspconfig.setup_handlers({
-				function(server)
-					-- lspconfig[server].setup({
-					-- 	capabilities = capabilities,
-					-- })
-					vim.lsp.config(server, {
+			local servers = {
+				astro = 'astro-ls',
+				cssls = 'css-languageserver',
+				eslint = 'vscode-eslint-language-server',
+				graphql = 'graphql-lsp',
+				html = 'html-languageserver',
+				jsonls = 'vscode-json-languageserver',
+				ts_ls = 'typescript-language-server',
+				volar = 'vue-language-server',
+				yamlls = 'yaml-language-server',
+
+				clangd = 'clangd',
+				gopls = 'gopls',
+				intelephense = 'intelephense',
+				jdtls = 'jdtls',
+				julials = 'julia',
+				kotlin_language_server = 'kotlin-language-server',
+				pylsp = 'pylsp',
+				ruby_lsp = 'ruby-lsp',
+				rust_analyzer = 'rust-analyzer',
+				sqlls = 'sql-language-server',
+
+				awk_ls = 'awk-language-server',
+				bashls = 'bash-language-server',
+				cmake = 'cmake-language-server',
+				dockerls = 'docker-langserver',
+				groovyls = 'groovy-language-server',
+				lemminx = 'lemminx',
+				lua_ls = 'lua-language-server',
+				marksman = 'marksman',
+				nil_ls = 'nil',
+				taplo = 'taplo',
+				vimls = 'vim-language-server',
+			}
+			for server_name, cmd in pairs(servers) do
+				if vim.fn.executable(cmd) == 1 then
+					vim.lsp.config(server_name, {
 						capabilities = capabilities,
 					})
-				end,
-			})
+					vim.lsp.enable(server_name)
+				end
+			end
 
 			local h = require('helpers.map')
 			h.nmap('<leader>e', vim.diagnostic.open_float)
 			h.nmap('<leader>l', vim.diagnostic.setloclist)
-
-			-- use LspAttach autocommand to only map the following keys
-			-- after the language server attaches to the current buffer
 			autocmd('LspAttach', {
-				group = vim.api.nvim_create_augroup('UserLspConfig', {}),
+				group = augroup('UserLspConfig', { clear = true }),
 				callback = function(ev)
-					-- enable completion triggered by <c-x><c-o>
 					vim.bo[ev.buf].omnifunc = 'v:lua.vim.lsp.omnifunc'
-
-					------------------------------
-					-- buffer local mappings
-					------------------------------
 					local opts = { buffer = ev.buf }
-					h.nmap('K', vim.lsp.buf.hover, opts)
 
+					h.nmap('K', vim.lsp.buf.hover, opts)
 					h.nmap('gD', vim.lsp.buf.declaration, opts)
 					h.nmap('gd', vim.lsp.buf.definition, opts)
 					h.nmap('gi', vim.lsp.buf.implementation, opts)
 					h.nmap('gr', vim.lsp.buf.references, opts)
-
-					-- h.nmap('<c-k>', vim.lsp.buf.signature_help, opts)
 					h.nmap('<space>wa', vim.lsp.buf.add_workspace_folder, opts)
 					h.nmap('<space>wr', vim.lsp.buf.remove_workspace_folder, opts)
 					h.nmap('<space>wl', function() print(vim.inspect(vim.lsp.buf.list_workspace_folders())) end, opts)
@@ -100,76 +82,17 @@ return {
 					h.nmap('<space>rn', vim.lsp.buf.rename, opts)
 					h.nmap('<space>ca', vim.lsp.buf.code_action, opts)
 					h.vmap('<space>ca', vim.lsp.buf.code_action, opts)
-
-					h.nmap('<space>f', function() vim.lsp.buf.format({ async = true }) end, opts)
+					h.nmap('<space>f', function() require("conform").format({ async = true }) end, opts)
 				end,
 			})
 
-			-- ------------------------------
-			-- -- efm-langserver settings
-			-- ------------------------------
-			-- lspconfig.efm.setup({
-			-- 	init_options = {
-			-- 		documentFormatting = true,
-			-- 		documentRangeFormatting = true,
-			-- 	},
-			-- 	settings = {
-			-- 		rootMarkers = {
-			-- 			".git/",
-			-- 		},
-			-- 		languages = {
-			-- 			lua = {
-			-- 				{
-			-- 					formatCommand = "stylua --color Never --config-path ~/.config/.stylua.toml -",
-			-- 					lintIgnoreExitCode = true,
-			-- 				},
-			-- 				{
-			-- 					lintCommand = "luacheck --no-color --quiet --config ~/.config/.luacheckrc -",
-			-- 					lintFormats = { "%f:%l:%c: %m" },
-			-- 					lintIgnoreExitCode = true,
-			-- 				},
-			-- 			},
-			-- 		},
-			-- 	},
-			-- 	filetypes = {
-			-- 		"lua",
-			-- 	},
-			-- })
-
-			-- local languages = require('efmls-configs.defaults').languages()
-			-- lspconfig.efm.setup(vim.tbl_extend('force',
-			-- 	{
-			-- 		filetypes = vim.tbl_keys(languages),
-			-- 		settings = {
-			-- 			rootMarkers = { '.git/' },
-			-- 			languages = languages,
-			-- 		},
-			-- 		init_options = {
-			-- 			documentFormatting = true,
-			-- 			documentRangeFormatting = true,
-			-- 		},
-			-- 	},
-			-- 	{}
-			-- ))
-
-
-			-- comment out because stevearc/conform.nvim will do the following
-			------------------------------
-			-- go settings
-			------------------------------
-			-- auto goimports
 			autocmd('BufWritePre', {
-				pattern = '*.go',
-				callback = function()
+				group = augroup('LspAutoImport', { clear = true }),
+				pattern = { "*.go", "*.js", "*.jsx", "*.ts", "*.tsx", "*.vue", "*.astro" },
+				callback = function(args)
 					local params = vim.lsp.util.make_range_params()
 					params.context = { only = { 'source.organizeImports' } }
-
-					-- buf_request_sync defaults to a 1000ms timeout. Depending on your
-					-- machine and codebase, you may want longer. Add an additional
-					-- argument after params if you find that you have to write the file
-					-- twice for changes to be saved.
-					-- E.g., vim.lsp.buf_request_sync(0, 'textDocument/codeAction', params, 3000)
-					local result = vim.lsp.buf_request_sync(0, 'textDocument/codeAction', params)
+					local result = vim.lsp.buf_request_sync(args.buf, 'textDocument/codeAction', params, 3000)
 					for cid, res in pairs(result or {}) do
 						for _, r in pairs(res.result or {}) do
 							if r.edit then
@@ -178,16 +101,6 @@ return {
 							end
 						end
 					end
-
-					vim.lsp.buf.format({ async = false })
-				end
-			})
-
-			-- format on save
-			vim.api.nvim_create_autocmd('BufWritePre', {
-				group = vim.api.nvim_create_augroup('FormatOnSave', {}),
-				callback = function()
-					vim.lsp.buf.format({ async = false })
 				end,
 			})
 		end,

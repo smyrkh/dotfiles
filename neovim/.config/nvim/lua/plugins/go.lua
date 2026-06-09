@@ -79,9 +79,11 @@ if vim.fn.executable('go') == 1 then
 		build = ':lua require("go.install").update_all_sync()',
 	})
 else
-	vim.api.nvim_echo({
-		{ "Failed to build go.nvim: Command not found: go", "Comment" },
-	}, true, {})
+	vim.schedule(function()
+		vim.api.nvim_echo({
+			{ "go.nvim: command not found: go", "Comment" },
+		}, true, {})
+	end)
 end
 
 return go_plugins

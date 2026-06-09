@@ -4,6 +4,9 @@ local config = wezterm.config_builder()
 ------------------------------
 -- window settings
 ------------------------------
+-- color scheme
+config.color_scheme = 'tokyonight_night'
+
 -- window size
 config.initial_rows = 45
 config.initial_cols = 160
@@ -70,8 +73,12 @@ config.mouse_bindings = {
 ------------------------------
 config.keys = {
 	{ key = "q", mods = "CTRL",       action = wezterm.action.ActivateCopyMode },
-	{ key = "[", mods = "CTRL|SHIFT", action = wezterm.action.MoveTabRelative(-1) },
-	{ key = "]", mods = "CTRL|SHIFT", action = wezterm.action.MoveTabRelative(1) },
+
+	{ key = "[", mods = "SHIFT|CTRL", action = wezterm.action.MoveTabRelative(-1) },
+	{ key = "]", mods = "SHIFT|CTRL", action = wezterm.action.MoveTabRelative(1) },
+
+	{ key = 't', mods = "SHIFT|CTRL", action = wezterm.action.SpawnCommandInNewTab { cwd = wezterm.home_dir, domain = 'CurrentPaneDomain' } },
+	{ key = 'n', mods = "SHIFT|CTRL", action = wezterm.action.SpawnCommandInNewWindow { cwd = wezterm.home_dir } },
 }
 
 return config

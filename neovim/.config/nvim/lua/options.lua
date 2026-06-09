@@ -64,7 +64,6 @@ o.mouse = ''
 -- also yank to os clipboard
 o.clipboard:append { 'unnamedplus' }
 
-
 ------------------------------
 -- ex mode settings
 ------------------------------

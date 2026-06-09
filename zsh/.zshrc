@@ -34,6 +34,12 @@ bindkey -e
 
 # bindkey -v # vim keybind
 # auto complete
+if [ -d "/nix/var/nix/profiles/default/share/zsh/site-functions" ]; then
+    fpath=("/nix/var/nix/profiles/default/share/zsh/site-functions" $fpath)
+fi
+if [ -d "$HOME/.nix-profile/share/zsh/site-functions" ]; then
+    fpath=("$HOME/.nix-profile/share/zsh/site-functions" $fpath)
+fi
 autoload -Uz compinit; compinit -i
 
 # completion style
@@ -94,69 +100,7 @@ bindkey '^y' cd-up
 setopt ignoreeof
 
 # custom prompt
-autoload -Uz add-zsh-hook
-autoload -Uz vcs_info
-setopt PROMPT_SUBST
-zstyle ':vcs_info:*' formats '%m [%b]'
-zstyle ':vcs_info:*' actionformats '%m [%b|%a]'
-# right prompt
-local colorPwd='{white}'
-local colorVcs='{white}'
-local colorHost='{white}'
-local colorRc='{white}'
-local colorTime='{white}'
-case $(uname) in
-	Linux)
-		colorPwd='{yellow}'
-		colorVcs='{cyan}'
-		colorHost='{green}'
-		colorRc='{blue}'
-		;;
-	Darwin)
-		colorPwd='{red}'
-		colorVcs='{magenta}'
-		colorHost='{cyan}'
-		colorRc='{yellow}'
-		;;
-esac
-precmd () {
-	# pwd
-	local left="%F${colorPwd}[%d]%f"
-
-	# vcs
-	vcs_info
-	# local right="%F${colorVcs}${vcs_info_msg_0_}%f"
-	# <return code> + vcs + current time
-	# local right="%F${colorRc}<%?>%f %F${colorVcs}${vcs_info_msg_0_}%f %F${colorTime}%D{%b %d}, %*%f"
-	# <return code> + vcs
-	local right="%F${colorRc}<%?>%f %F${colorVcs}${vcs_info_msg_0_}%f"
-
-	# caluculate space length
-	local invisible='%([BSUbfksu]|([FK]|){*})'
-	local leftwidth=${#${(S%%)left//$~invisible/}}
-	local rightwidth=${#${(S%%)right//$~invisible/}}
-	local padwidth=$(($COLUMNS - ($leftwidth + $rightwidth) % $COLUMNS))
-	print -P $left${(r:$padwidth:: :)}$right
-}
-_vcs_precmd () { vcs_info }
-add-zsh-hook precmd _vcs_precmd
-# left prompt
-# user@hostname
-PROMPT="%F${colorHost}%n@%M %#%f "
-# <return code> + current time
-# RPROMPT="%F${colorRc}<%?>%f %F${colorTime}%D{%b %d}, %*%f"
-
-zstyle ':vcs_info:git+set-message:*' hooks git-config-user
-function +vi-git-config-user(){
-	hook_com[misc]+=$(git config user.email)
-}
-
-# update prompt current time
-# comment out: for wezterm copy mode
-# TMOUT=1
-# TRAPALRM() {
-#   zle reset-prompt
-# }
+(( $+commands[starship] )) && eval "$(starship init zsh)"
 
 # compile .zshrc for loading
 if [ ! -f ~/.zshrc.zwc ] || [ ~/.dotfiles/.zshrc -nt ~/.zshrc.zwc ]; then
@@ -173,68 +117,116 @@ alias mv='mv -i'
 alias cdp='cd -P'
 
 # use improve commands if exists
-type rg &> /dev/null \
+(( $+commands[rg] )) \
 	&& export RIPGREP_CONFIG_PATH=~/.ripgreprc \
 	&& alias grep='rg'
-# type fdfind &> /dev/null \
-# 	&& alias fd='fdfind' \
-# 	&& alias find='fdfind'
-type fd &> /dev/null \
+(( $+commands[fd] )) \
 	&& alias find='fd'
-if type eza &> /dev/null; then
-	alias ls='eza -F' \
-	&& alias ll='eza -F -lBghm -snew --time-style=full-iso' \
-	&& chpwd() { eza -a -F }
-else
-	type exa &> /dev/null \
-		&& alias ls='exa -F' \
-		&& alias ll='exa -F -lBghm -snew --time-style=full-iso' \
-		&& chpwd() { exa -a -F }
+if (( $+commands[eza] )); then
+	alias ls='eza -F'
+	alias ll='eza -F -lBghm -snew --time-style=full-iso'
+	chpwd() {
+		eza -a -F
+	}
+elif (( $+commands[exa] )); then
+	alias ls='exa -F'
+	alias ll='exa -F -lBghm -snew --time-style=full-iso'
+	chpwd() {
+		exa -a -F
+	}
 fi
-type nvim &> /dev/null \
+(( $+commands[nvim] )) \
 	&& alias nv='nvim' \
 	&& alias nvc='() { nvim <("$@") }'
-type htop &> /dev/null \
+(( $+commands[htop] )) \
 	&& alias top='htop -d 10'
-# type dfc &> /dev/null \
-# 	&& alias df='dfc'
-type duf &> /dev/null \
+(( $+commands[duf] )) \
 	&& alias df='duf'
-type bat &> /dev/null \
+(( $+commands[bat] )) \
 	&& alias cat='bat'
-type prettyping &> /dev/null \
+(( $+commands[prettyping] )) \
 	&& alias ping='prettyping'
-# type ncdu &> /dev/null \
-# 	&& alias du='ncdu --color dark -rr'
-type dust &> /dev/null \
+(( $+commands[dust] )) \
 	&& alias du='dust'
-# type httpie &> /dev/null \
-# 	&& alias curl='httpie'
-type procs &> /dev/null \
+(( $+commands[procs] )) \
 	&& alias ps='procs'
 
 # shortcuts
-type trans &> /dev/null \
+(( $+commands[trans] )) \
 	&& alias ej='trans en:ja'
-type aws &> /dev/null \
+(( $+commands[aws] )) \
 	&& alias awslocalstack='aws --endpoint-url http://localhost:4566 --profile localstack'
-# expect package contains unbuffer
-type unbuffer &> /dev/null \
-	&& type less &> /dev/null \
-	&& alias ubless='() { unbuffer "$@" |& less -SR }'
-#	&& compdef ubless='unbuffer'
-type checksec &> /dev/null \
+(( $+commands[checksec] )) \
 	&& alias chefsec='() { checksec --file="$@" }'
 
 # completion for lima
-type limactl &> /dev/null \
+(( $+commands[limactl] )) \
 	&& eval "$(limactl completion zsh)"
 # completion for uv
-type uv &> /dev/null \
+(( $+commands[uv] )) \
 	&& eval "$(uv generate-shell-completion zsh)"
 # completion for uvx
-type uvx &> /dev/null \
+(( $+commands[uvx] )) \
 	&& eval "$(uvx --generate-shell-completion zsh)"
-type docker &> /dev/null \
-	&& alias dx='() { docker exec -it "$@" $(docker ps | peco | awk "{print \$1}") zsh }'
+
+# expect package contains unbuffer
+if (( $+commands[unbuffer] )); then
+	(( $+commands[less] )) \
+		&& alias ubless='() { unbuffer "$@" |& less -SR }'
+#		&& compdef ubless='unbuffer'
+fi
+
+if (( $+commands[fzf] )); then
+	eval "$(fzf --zsh)"
+
+	if (( $+commands[docker] )); then
+		function dx() {
+			local container
+
+			container=$(docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}" \
+				| fzf --header-lines=1 --prompt="Select Container> " \
+				| awk '{print $1}')
+
+			if [[ -n "$container" ]]; then
+				echo "Entering ${container}..."
+
+				docker exec "$@" -it "$container" /bin/sh -c '
+					if command -v zsh >/dev/null 2>&1; then
+						exec zsh
+					elif command -v bash >/dev/null 2>&1; then
+						exec bash
+					else
+						exec sh
+					fi
+				'
+			fi
+		}
+	fi
+
+	if (( $+commands[nix] )); then
+		function nd() {
+			local base_dir="${HOME}/nix-templates"
+			local selected
+
+			local templates=()
+			for f in "${base_dir}"/*/flake.nix(N); do
+				templates+=("$(basename "$(dirname "$f")")")
+			done
+
+			if [[ ${#templates[@]} -eq 0 ]]; then
+				echo "Error: No templates found containing flake.nix in ${base_dir}/*" >&2
+				return 1
+			fi
+
+			selected=$(printf "%s\n" "${templates[@]}" | fzf --prompt="Select Nix Template> ")
+
+			if [[ -n "$selected" ]]; then
+				local target_flake="${base_dir}/${selected}"
+				echo "Loading nix devShell from ${selected}..."
+
+				nix develop "${target_flake}" -c zsh
+			fi
+		}
+	fi
+fi
 

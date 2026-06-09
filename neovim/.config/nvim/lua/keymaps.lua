@@ -57,6 +57,10 @@ h.vmap('P', 'p')
 h.xmap('p', 'P')
 h.xmap('P', 'p')
 
+-- commenting
+h.nmap('<leader>c', 'gcc', { remap = true, silent = true })
+h.vmap('<leader>c', 'gc', { remap = true, silent = true })
+
 ------------------------------
 -- tab keymaps
 -- use buffer instead of tab !! comment out !!

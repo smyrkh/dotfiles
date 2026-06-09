@@ -34,10 +34,20 @@ end
 -- filetype autocmds
 ------------------------------
 -- disable static analysis for env file
-autocmd('BufEnter', {
+autocmd({'BufRead', "BufNewFile"}, {
 	pattern = "*.env",
 	callback = function(args)
 		vim.diagnostic.enable(false, { bufnr = args.buf })
+	end,
+})
+
+-- configure indent for nix file
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = "nix",
+	callback = function()
+		vim.bo.expandtab = true
+		vim.bo.shiftwidth = 2
+		vim.bo.tabstop = 2
 	end,
 })
 
